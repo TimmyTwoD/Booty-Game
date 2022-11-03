@@ -7,69 +7,117 @@ public class Highlight : MonoBehaviour
     public enum HightlightMode
     {
         Hover,
-        Toggle,
+        EarlyToggle,
+        LateToggle,
         Pressed
     }
 
-    public bool isEnabled = true;
-
-    [SerializeField]
-    private HightlightMode _mode;
-    
-    private bool _isActive;
-    private Renderer _rend;
-
-    // Start is called before the first frame update
-    void Start()
+    public enum HighlightState
     {
-        _rend = GetComponent<Renderer>();
+        Disabled,
+        Enabled,
+        Active
     }
 
-    // Update is called once per frame
+    public HightlightMode mode;
+    public HighlightState state = HighlightState.Enabled;
+    public HighlightEffect effect;
+
+    private HighlightState _lastState = HighlightState.Disabled;
+
     void Update()
     {
-        if (isEnabled && _isActive)
+        switch (state)
         {
-            float t = Time.time;
-            float r = Mathf.Sin(t);
-            float g = Mathf.Sin(0.5f * t);
-            float b = Mathf.Sin(0.25f * t);
-            
-            _rend.material.color = new Color(r, g, b);
+            case HighlightState.Active:
+                effect.OnActive();
+                break;
+            case HighlightState.Enabled:
+            case HighlightState.Disabled:
+                Deactivate();
+                break;
         }
-        else
-        {
-            _rend.material.color = Color.white;
-        }
+
+        _lastState = state;
     }
 
     void OnMouseEnter()
     {
-        if (_mode == HightlightMode.Hover)
-            _isActive = true;
+        if (mode == HightlightMode.Hover)
+        {
+            Activate();
+        }
     }
 
     void OnMouseExit()
     {
-        if (_mode == HightlightMode.Hover)
-            _isActive = false;
+        if (mode == HightlightMode.Hover)
+        {
+            Deactivate();
+        }
         
-        if (_mode == HightlightMode.Pressed)
-            _isActive = false;
+        if (mode == HightlightMode.Pressed)
+        {
+            Deactivate();
+        }
     }
 
     void OnMouseDown()
     {
-        if (_mode == HightlightMode.Pressed)
-            _isActive = true;
+        if (mode == HightlightMode.Pressed)
+        {
+            Activate();
+        }
         
-        if (_mode == HightlightMode.Toggle)
-            _isActive = !_isActive;
+        if (mode == HightlightMode.EarlyToggle)
+        {
+            Toggle();
+        }
     }
 
     void OnMouseUp()
     {
-        if (_mode == HightlightMode.Pressed)
-            _isActive = false;
+        if (mode == HightlightMode.Pressed)
+        {
+            Deactivate();
+        }
+    }
+
+    void OnMouseUpAsButton()
+    {
+        if (mode == HightlightMode.LateToggle)
+        {
+            Toggle();
+        }
+    }
+
+    void Activate()
+    {
+        if (state == HighlightState.Enabled)
+        {
+            state = HighlightState.Active;
+            effect.OnActivate();
+        }
+    }
+
+    void Deactivate()
+    {
+        if (state == HighlightState.Active)
+        {
+            state = HighlightState.Enabled;
+            effect.OnDeactivate();
+        }
+        else if (_lastState == HighlightState.Active)
+        {
+            effect.OnDeactivate();
+        }
+    }
+
+    void Toggle()
+    {
+        if (state == HighlightState.Active)
+            Deactivate();
+        else
+            Activate();
     }
 }
