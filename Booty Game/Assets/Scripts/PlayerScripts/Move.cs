@@ -20,7 +20,10 @@ public class Move : MonoBehaviour
         {
             target = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         }
+    }
 
-        transform.position = Vector2.MoveTowards(transform.position, target, speed * Time.deltaTime);
+    void FixedUpdate()
+    {
+        transform.position = Vector2.MoveTowards(transform.position, target, (speed * Time.deltaTime)/2);
     }
 }
